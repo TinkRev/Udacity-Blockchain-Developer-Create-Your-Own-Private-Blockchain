@@ -75,7 +75,7 @@ class Blockchain {
                 self.height++;
                 block.height = self.height;
                 self.chain.push(block);
-                let errorLogs = self.validateChain();
+                let errorLogs = await self.validateChain();
                 if(errorLogs.length===0){
                     resolve(block);
                 }else{
@@ -126,19 +126,24 @@ class Blockchain {
             try{
                 let msgTime = parseInt(message.split(':')[1]);
                 let currentTime = parseInt(new Date().getTime().toString().slice(0,-3));
-                if(currentTime-msgTime>300){
-                    if(bitcoinMessage.verify(message, address, signature)){
+                if(currentTime-msgTime<300){
+                    let verifySignatureResult = bitcoinMessage.verify(message, address, signature);
+                    if(verifySignatureResult){
                         let data = {
                             "address": address,
                             "star": star
                         };
-                        let block = new BlockClass.Block({data: data});
-                        await this._addBlock(block);
-                        resolve(block);
+                        let block = new BlockClass.Block(data);
+                        let addedBlock = await this._addBlock(block).then(e => {
+                            resolve(e);
+                        });
                     }
+                }else{
+                    console.log("time passed.")
                 }
                 reject(Error("create error"));
             }catch(exception){
+                console.log(exception);
                 reject(exception);
             }
         });
@@ -154,7 +159,7 @@ class Blockchain {
         let self = this;
         return new Promise((resolve, reject) => {
            let els = self.chain.filter(e => e.hash === hash);
-           if(els.length==1){
+           if(els.length===1){
                resolve(els[0]);
            }else if(els.length>1){
                reject(Error("find more than one block!!!"));
@@ -191,10 +196,12 @@ class Blockchain {
         let stars = [];
         return new Promise((resolve, reject) => {
             self.chain.filter(block => {
-                let data = block.getBData();
-                if(data.address===address){
-                    stars.push(data.star);
-                }
+                block.getBData().then(data =>{
+                    console.log(data);
+                    if(data.address===address){
+                        stars.push(data.star);
+                    }
+                });
             });
             resolve(stars);
         });
