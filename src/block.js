@@ -45,13 +45,9 @@ class Block {
             let hashValue = SHA256(JSON.stringify(self)).toString();
             self.hash = auxiliary;
             // Comparing if the hashes changed
-            if(self.hash===hashValue){
-                // Returning the Block is not valid
-                resolve(true);
-            }else{
-                // Returning the Block is valid
-                resolve(false);
-            }
+            // Returning the Block is not valid
+            // Returning the Block is valid
+            resolve(self.hash===hashValue);
         });
     }
 
