@@ -71,6 +71,8 @@ class Blockchain {
                     block.previousBlockHash = self.chain[self.height].hash;
                 }
                 block.time = Date.now();
+                block.hash = null;
+                // notice: new block hash is null, so validate the block hash shoule empty block hash first.
                 block.hash = SHA256(JSON.stringify(block)).toString();
                 self.height++;
                 block.height = self.height;
