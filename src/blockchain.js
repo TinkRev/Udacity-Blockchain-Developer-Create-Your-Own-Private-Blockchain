@@ -73,9 +73,9 @@ class Blockchain {
                 block.time = Date.now();
                 block.hash = null;
                 // notice: new block hash is null, so validate the block hash shoule empty block hash first.
-                block.hash = SHA256(JSON.stringify(block)).toString();
                 self.height++;
                 block.height = self.height;
+                block.hash = SHA256(JSON.stringify(block)).toString();
                 self.chain.push(block);
                 let errorLogs = await self.validateChain();
                 if(errorLogs.length===0){
@@ -136,16 +136,14 @@ class Blockchain {
                             "star": star
                         };
                         let block = new BlockClass.Block(data);
-                        let addedBlock = await this._addBlock(block).then(e => {
-                            resolve(e);
-                        });
+                        let addedBlock = await this._addBlock(block);
+                        resolve(addedBlock);
                     }
                 }else{
                     console.log("time passed.")
                 }
                 reject(Error("create error"));
             }catch(exception){
-                console.log(exception);
                 reject(exception);
             }
         });
@@ -190,7 +188,6 @@ class Blockchain {
         return new Promise((resolve, reject) => {
             self.chain.filter(block => {
                 block.getBData().then(data =>{
-                    console.log(data);
                     if(data.address===address){
                         stars.push(data.star);
                     }
@@ -212,14 +209,16 @@ class Blockchain {
         let previousBlockHash = null;
         return new Promise(async (resolve, reject) => {
             self.chain.forEach(block => {
-                if(block.validate()){
-                    if(block.previousBlockHash !== previousBlockHash){
+                block.validate().then(result => {
+                    if(result){
+                        if(block.previousBlockHash !== previousBlockHash){
+                            errorLog.push(block);
+                        }
+                        previousBlockHash = block.hash;
+                    }else{
                         errorLog.push(block);
                     }
-                    previousBlockHash = block.hash;
-                }else{
-                    errorLog.push(block);
-                }
+                });
             });
             resolve(errorLog);
         });
