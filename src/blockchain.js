@@ -160,13 +160,8 @@ class Blockchain {
     getBlockByHash(hash) {
         let self = this;
         return new Promise((resolve, reject) => {
-           let els = self.chain.filter(e => e.hash === hash);
-           if(els.length===1){
-               resolve(els[0]);
-           }else if(els.length>1){
-               reject(Error("find more than one block!!!"));
-           }
-           resolve(null);
+           let block = self.chain.find(e => e.hash === hash);
+           resolve(block);
         });
     }
 
